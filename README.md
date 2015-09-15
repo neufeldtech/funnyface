@@ -15,7 +15,7 @@ git clone https://github.com/lukaswhite/face-detection-nodejs .
 cd face-detection-nodejs
 vagrant up
 vagrant ssh
-cd vagrant
+cd /vagrant
 npm install
 node index.js 
 ```
