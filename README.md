@@ -6,7 +6,7 @@ Essentially the application tries to mimic (up to a point) the way in which Face
 
 Behind the scenes, the application uses the open-source [OpenCV](http://opencv.org/) library, specifically the [Viola-Jones object detection algorithm](https://en.wikipedia.org/wiki/Viola%E2%80%93Jones_object_detection_framework). In order to run OpenCV from Node.js, it uses the [opencv](https://www.npmjs.com/package/opencv) package.
 
-This application forms the basis of an upcoming tutorial - full installation instructions will be in that.
+This application accompanies a SitePoint tutorial: [Build a Face Detection App Using Nodejs and OpenCV](http://www.sitepoint.com/face-detection-nodejs-opencv)
 
 ##Quick Start
 
@@ -15,6 +15,7 @@ git clone https://github.com/lukaswhite/face-detection-nodejs .
 cd face-detection-nodejs
 vagrant up
 vagrant ssh
+cd vagrant
 npm install
 node index.js 
 ```
