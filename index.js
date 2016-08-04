@@ -149,18 +149,21 @@ app.post('/upload', upload.single('file'), function(req, res, next){
       function(faces, callback) {
         if (faces.length == 0)
           return callback("no faces found")
-        var faceOne = faces[0]
-        console.log(faceOne);
-        var helmetWidth = faceOne.width * 1.95
-        var helmetHeight = faceOne.height * 1.95
-        var xOffset = faceOne.x - faceOne.width * 0.3
-        var yOffset = faceOne.y - faceOne.height * 0.6
-        var geometry = helmetWidth + "x" + helmetHeight + "+" + xOffset + "+" + yOffset
         var command = []
-        command.push("convert", dst, helmetPath, "-geometry", geometry , "-composite", "output.jpg")
+        command.push("convert", dst)
+        _.each(faces, function (face) {
+          console.log("found a face");
+          var helmetWidth = face.width * 1.95
+          var helmetHeight = face.height * 1.95
+          var xOffset = face.x - face.width * 0.25
+          var yOffset = face.y - face.height * 0.6
+          var geometry = helmetWidth + "x" + helmetHeight + "+" + xOffset + "+" + yOffset
+          command.push(helmetPath, "-geometry", geometry , "-composite")
+        });
+        command.push("output.jpg")
         //command.push("convert", src, helmetPath, helmetWidth + "x" + helmetHeight + "+" + xOffset + "+" + yOffset, "-composite", "output.png")
         easyimg.exec(command.join(' '))
-        callback(null, faceOne)
+        callback(null, faces)
       }
 
     ],
