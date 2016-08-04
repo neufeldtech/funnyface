@@ -10,7 +10,6 @@ var express   =   require( 'express' )
   , async     =    require( 'async' )
   , multer    =   require( 'multer' )
   , upload     =    multer( { dest: 'uploads/' } )
-  , exphbs    =   require( 'express-handlebars' )
   , easyimg   =    require( 'easyimage' )
   , _         =    require( 'lodash' )
   , cv         =   require( 'opencv' );
@@ -18,6 +17,7 @@ var express   =   require( 'express' )
 /**
  * Create a simple hash of MIME types to file extensions
  */
+var helmetPath = __dirname + '/public/helmet-large-transparent-med.png'
 var exts = {
   'image/jpeg'   :   '.jpg',
   'image/png'    :   '.png',
@@ -27,7 +27,7 @@ var exts = {
 /**
  * Note that you may want to change this, depending on your setup.
  */
-var port = 8080;
+var port = process.env.NODE_PORT || 8080;
 
 /**
  * Create the express app
@@ -42,15 +42,14 @@ app.use(express.static(__dirname + '/public'))
 /**
  * Set up Handlebars templating
  */
-app.engine('.hbs', exphbs( { extname: '.hbs', defaultLayout: 'default' } ) );
-app.set( 'view engine', '.hbs' );
+
 
 /**
  * Default page; simply renders a file upload form
  */
 app.get('/', function( req, res, next ) {
 
-  return res.render('index');
+  return res.json({ ok: true });
 
 });
 
@@ -146,6 +145,22 @@ app.post('/upload', upload.single('file'), function(req, res, next){
          */
         im.detectObject( cv.FACE_CASCADE, {}, callback );
 
+      },
+      function(faces, callback) {
+        if (faces.length == 0)
+          return callback("no faces found")
+        var faceOne = faces[0]
+        console.log(faceOne);
+        var helmetWidth = faceOne.width * 1.95
+        var helmetHeight = faceOne.height * 1.95
+        var xOffset = faceOne.x - faceOne.width * 0.3
+        var yOffset = faceOne.y - faceOne.height * 0.6
+        var geometry = helmetWidth + "x" + helmetHeight + "+" + xOffset + "+" + yOffset
+        var command = []
+        command.push("convert", dst, helmetPath, "-geometry", geometry , "-composite", "output.jpg")
+        //command.push("convert", src, helmetPath, helmetWidth + "x" + helmetHeight + "+" + xOffset + "+" + yOffset, "-composite", "output.png")
+        easyimg.exec(command.join(' '))
+        callback(null, faceOne)
       }
 
     ],
@@ -157,24 +172,13 @@ app.post('/upload', upload.single('file'), function(req, res, next){
        */
       if ( err ) {
 
-        return res.render(
-          'error',
-          {
-            message : err.message
-          }
-        );
+        return res.json({ ok: false, message: err });
       }
 
       /**
        * We're all good; render the result page.
        */
-      return res.render(
-        'result',
-        {
-          filename   :   filename,
-          faces     :   faces
-        }
-      );
+      return res.json({ faces: faces });
 
     }
   );
