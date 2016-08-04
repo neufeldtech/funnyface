@@ -19,5 +19,8 @@
   },
   "scripts": {
     "start": "npm install && node index.js"
+  },
+  "engines": {
+    "node": "^0.10.0"
   }
 }
