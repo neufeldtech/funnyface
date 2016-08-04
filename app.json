@@ -1,0 +1,20 @@
+{
+  "name": "quarterbackme",
+  "scripts": {
+  "WEB_CONCURRENCY": {
+    "description": "The number of processes to run.",
+    "value": "5"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1
+    }
+  },
+  "image": "heroku/node",
+  "buildpacks": [
+    {
+      "url": "https://github.com/slobdell/heroku-buildpack-python-opencv-scipy.git"
+    }
+  ]
+}
