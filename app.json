@@ -1,10 +1,6 @@
 {
   "name": "quarterbackme",
   "scripts": {
-  "WEB_CONCURRENCY": {
-    "description": "The number of processes to run.",
-    "value": "1"
-    }
   },
   "formation": {
     "web": {
