@@ -17,7 +17,7 @@ RUN apt-get update
 RUN curl -sL https://deb.nodesource.com/setup_4.x | bash -
 RUN apt-get install -y nodejs
 RUN mkdir -p /opt
-RUN git clone https://github.com/sitepoint-editors/face-detection-nodejs.git /opt/face-detection-nodejs
+RUN git clone https://github.com/neufeldtech/face-detection-nodejs.git /opt/face-detection-nodejs
 WORKDIR /opt/face-detection-nodejs
 RUN mkdir /opt/yolo
 RUN npm install

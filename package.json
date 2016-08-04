@@ -14,9 +14,10 @@
     "express-handlebars": "^2.0.1",
     "lodash": "^3.10.1",
     "multer": "^1.0.3",
-    "opencv": "^3.0.0"
+    "opencv": "^3.0.0",
+    "temp": "^0.8.3"
   },
-    "scripts": {
-      "start": "npm install && node index.js"
-    }
+  "scripts": {
+    "start": "npm install && node index.js"
+  }
 }
