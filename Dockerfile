@@ -21,5 +21,6 @@ RUN git clone https://github.com/neufeldtech/face-detection-nodejs.git /opt/face
 WORKDIR /opt/face-detection-nodejs
 RUN mkdir /opt/yolo
 RUN npm install
-EXPOSE 8080
+EXPOSE 8008
+ENV NODE_PORT 8008
 CMD ["/usr/bin/node", "/opt/face-detection-nodejs/index.js"]
