@@ -22,7 +22,11 @@ var port = process.env.PORT || process.env.NODE_PORT || 8080;
 function nukeFile(filePath){
   fs.exists(filePath, function(exists) {
     if (exists) {
-      fs.unlink(filePath);
+      fs.unlink(filePath, function(err){
+        if (err) {
+          console.log(err)
+        }
+      });
     }
   })
 }
@@ -108,7 +112,7 @@ app.post('/upload', function(req, res, next){
         },
         function(faces, callback) {
           if (faces.length == 0)
-          return callback("no faces found")
+          return callback(null, dst)
           var command = []
           var outputFileName = temp.path({suffix: '.jpg'});
           command.push("convert", dst)
@@ -133,7 +137,7 @@ app.post('/upload', function(req, res, next){
       ],
       function( err, outputFileName ) {
         if ( err ) {
-          return res.status(500).json({ ok: false, message: err });
+          return res.status(400).json({ ok: false, message: err });
         }
 
         return res.sendFile(outputFileName, function(err){
