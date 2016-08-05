@@ -40,10 +40,10 @@ app.get('/', function( req, res, next ) {
 app.post('/upload', function(req, res, next){
   upload(req, res, function(err) {
     if (err) {
-      return res.json({ ok: false, message: "send a multipart/form post with an image as the 'file' parameter." })
+      return res.status(400).json({ ok: false, message: "send a multipart/form post with an image as the 'file' parameter." })
     }
     if (!req.file || !req.file.filename) {
-      return res.json({ ok: false, message: "no image specified for 'file' parameter" });
+      return res.status(400).json({ ok: false, message: "no image specified for 'file' parameter" });
     }
     var filename = req.file.filename + exts[req.file.mimetype]
     , src = __dirname + '/' + req.file.path
@@ -133,7 +133,7 @@ app.post('/upload', function(req, res, next){
       ],
       function( err, outputFileName ) {
         if ( err ) {
-          return res.json({ ok: false, message: err });
+          return res.status(500).json({ ok: false, message: err });
         }
 
         return res.sendFile(outputFileName, function(err){
