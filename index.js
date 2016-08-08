@@ -127,8 +127,8 @@ app.post('/upload', function(req, res, next){
             //mustache settings
             var helmetWidth = face.width * 0.8
             var helmetHeight = face.height * 0.8
-            var xOffset = face.x + face.width * 0.09
-            var yOffset = face.y + face.height * 0.55
+            var xOffset = face.x + face.width * 0.1
+            var yOffset = face.y + face.height * 0.58
 
             var geometry = helmetWidth + "x" + helmetHeight + "+" + xOffset + "+" + yOffset
             command.push(helmetPath, "-geometry", geometry , "-composite")
