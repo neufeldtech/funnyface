@@ -1,9 +1,12 @@
 {
-  "name": "face-detection",
+  "name": "funnyface",
   "version": "1.0.0",
-  "description": "A simple application which demonstrates face detection in Node.js",
+  "description": "Layers funny images on top of faces",
   "main": "index.js",
-  "author": "Lukas White",
+  "contributors": [
+    "Lukas White",
+    "Jordan Neufeld"
+  ],
   "license": "MIT",
   "dependencies": {
     "async": "^1.4.2",
@@ -11,16 +14,15 @@
     "connect-busboy": "0.0.2",
     "easyimage": "^2.0.3",
     "express": "^4.13.3",
-    "express-handlebars": "^2.0.1",
     "lodash": "^3.10.1",
     "multer": "^1.0.3",
-    "opencv": "^3.0.0",
+    "opencv": "peterbraden/node-opencv",
     "temp": "^0.8.3"
   },
   "scripts": {
     "start": "npm install && node index.js"
   },
   "engines": {
-    "node": "^0.10.0"
+    "node": "4.2.1"
   }
 }

@@ -18,7 +18,7 @@ var exts = {
   'image/gif'    :   '.gif'
 }
 
-var port = process.env.PORT || process.env.NODE_PORT || 8080;
+var port = process.env.PORT || 8080;
 
 function nukeFile(filePath){
   fs.exists(filePath, function(exists) {
