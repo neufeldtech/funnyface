@@ -11,6 +11,7 @@ var express   =   require( 'express' )
   , exec      =    require('child_process').exec
 
 var helmetPath = __dirname + '/public/helmet-large-transparent-med.png'
+var helmetPath = __dirname + '/public/mustache.png'
 var exts = {
   'image/jpeg'   :   '.jpg',
   'image/png'    :   '.png',
@@ -117,10 +118,18 @@ app.post('/upload', function(req, res, next){
           var outputFileName = temp.path({suffix: '.jpg'});
           command.push("convert", dst)
           _.each(faces, function (face) {
-            var helmetWidth = face.width * 1.95
-            var helmetHeight = face.height * 1.95
-            var xOffset = face.x - face.width * 0.28
-            var yOffset = face.y - face.height * 0.6
+            // helmet settings
+            // var helmetWidth = face.width * 1.95
+            // var helmetHeight = face.height * 1.95
+            // var xOffset = face.x - face.width * 0.28
+            // var yOffset = face.y - face.height * 0.6
+
+            //mustache settings
+            var helmetWidth = face.width * 0.8
+            var helmetHeight = face.height * 0.8
+            var xOffset = face.x + face.width * 0.09
+            var yOffset = face.y + face.height * 0.55
+
             var geometry = helmetWidth + "x" + helmetHeight + "+" + xOffset + "+" + yOffset
             command.push(helmetPath, "-geometry", geometry , "-composite")
           });
