@@ -18,9 +18,19 @@
     "temp": "^0.8.3"
   },
   "scripts": {
-    "start": "npm install && node index.js"
+    "start": "npm install && node index.js",
+    "test": "./node_modules/.bin/mocha --recursive --timeout 5000 test",
+    "watch": "./node_modules/.bin/mocha --watch --recursive --timeout 5000 --growl --reporter nyan test"
   },
   "engines": {
     "node": "4.2.1"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "growl": "^1.9.2",
+    "istanbul": "^0.4.4",
+    "mocha": "^3.0.2",
+    "sinon": "^1.17.5",
+    "supertest": "^2.0.0"
   }
 }

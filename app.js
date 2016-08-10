@@ -34,18 +34,17 @@ module.exports = function(app) {
 
   app.get('/', function( req, res, next ) {
 
-    return res.json({ ok: true, message: "send a multipart/form post with an image as the 'file' parameter." });
+    return res.json({ ok: true, message: "send a multipart/form post with an image as the \'file\' parameter." });
 
   });
 
   app.post('/upload', function(req, res, next){
-    console.log(req.query)
     upload(req, res, function(err) {
       if (err) {
-        return res.status(400).json({ ok: false, message: "send a multipart/form post with an image as the 'file' parameter." })
+        return res.status(400).json({ ok: false, message: "send a multipart/form post with an image as the \'file\' parameter." })
       }
       if (!req.file || !req.file.filename) {
-        return res.status(400).json({ ok: false, message: "no image specified for 'file' parameter" });
+        return res.status(400).json({ ok: false, message: "no image specified for \'file\' parameter" });
       }
       var filename = req.file.filename + exts[req.file.mimetype]
       , src = __dirname + '/' + req.file.path
@@ -63,21 +62,15 @@ module.exports = function(app) {
               req.file.mimetype
             ) ) {
               return callback('Invalid file - please upload an image (.jpg, .png, .gif).')
-
             }
-
             return callback();
-
           },
           function( callback ) {
-
             easyimg.info( src ).then(
               function(file) {
-
                 if ( ( file.width < 500 ) || ( file.height < 300 ) ) {
                   return callback('Image must be at least 500 x 300 pixels');
                 }
-
                 return callback();
               }
             );
@@ -91,21 +84,14 @@ module.exports = function(app) {
                 dst        :   dst
               }
             ).then(function(image) {
-
               return callback();
-
             });
-
           },
           function( callback ) {
-
             cv.readImage( dst, callback );
-
           },
           function( im, callback ) {
-
             im.detectObject( cv.FACE_CASCADE, {}, callback );
-
           },
           function(faces, callback) {
             if (faces.length == 0)
@@ -119,7 +105,6 @@ module.exports = function(app) {
               // var helmetHeight = face.height * 1.95
               // var xOffset = face.x - face.width * 0.28
               // var yOffset = face.y - face.height * 0.6
-
               //mustache settings
               var helmetWidth = face.width * 0.8
               var helmetHeight = face.height * 0.8
@@ -138,7 +123,6 @@ module.exports = function(app) {
               return callback(null, outputFileName)
             })
           }
-
         ],
         function( err, outputFileName ) {
           if ( err ) {
@@ -146,18 +130,13 @@ module.exports = function(app) {
             nukeFile(dst || "notfound.jpg")
             return res.status(400).json({ ok: false, message: err });
           }
-
           return res.sendFile(outputFileName, function(err){
             nukeFile(src)
             nukeFile(dst)
             nukeFile(outputFileName)
           });
-
         }
       );
-
     });
-
   });
-
 }
