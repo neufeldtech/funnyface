@@ -1,7 +1,7 @@
 var express   =   require( 'express' )
   , async     =    require( 'async' )
   , multer    =   require( 'multer' )
-  , upload     =    multer( { dest: 'uploads/' } ).single('file')
+  , upload     =    multer( { dest: 'images/' } ).single('file')
   , easyimg   =    require( 'easyimage' )
   , _         =    require( 'lodash' )
   , cv         =   require( 'opencv' )
@@ -9,8 +9,9 @@ var express   =   require( 'express' )
   , fs         =   require( 'fs' )
   , exec      =    require('child_process').exec
 
-var helmetPath = __dirname + '/public/helmet-large-transparent-med.png'
+var helmetPath = __dirname + '/templates/helmet.png'
 var helmetPath = __dirname + '/templates/mustache.png'
+
 var exts = {
   'image/jpeg'   :   '.jpg',
   'image/png'    :   '.png',
@@ -48,7 +49,7 @@ module.exports = function(app) {
       }
       var filename = req.file.filename + exts[req.file.mimetype]
       , src = __dirname + '/' + req.file.path
-      , dst = __dirname + '/public/images/' + filename
+      , dst = __dirname + '/images/' + filename
 
       async.waterfall(
         [
@@ -61,7 +62,6 @@ module.exports = function(app) {
               ],
               req.file.mimetype
             ) ) {
-
               return callback('Invalid file - please upload an image (.jpg, .png, .gif).')
 
             }
@@ -74,8 +74,8 @@ module.exports = function(app) {
             easyimg.info( src ).then(
               function(file) {
 
-                if ( ( file.width < 960 ) || ( file.height < 300 ) ) {
-                  return callback('Image must be at least 960 x 300 pixels');
+                if ( ( file.width < 500 ) || ( file.height < 300 ) ) {
+                  return callback('Image must be at least 500 x 300 pixels');
                 }
 
                 return callback();
@@ -86,7 +86,7 @@ module.exports = function(app) {
 
             easyimg.resize(
               {
-                width      :   960,
+                width      :   800,
                 src        :   src,
                 dst        :   dst
               }
@@ -142,6 +142,8 @@ module.exports = function(app) {
         ],
         function( err, outputFileName ) {
           if ( err ) {
+            nukeFile(src || "notfound.jpg")
+            nukeFile(dst || "notfound.jpg")
             return res.status(400).json({ ok: false, message: err });
           }
 

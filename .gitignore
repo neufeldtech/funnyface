@@ -1,8 +1,6 @@
 .git/
-.vagrant/
-node_modules/
-uploads/*
-public/images/*
 .env
+*.log
+node_modules/
+images/
 fabfile.py
-images/*
