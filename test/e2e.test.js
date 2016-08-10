@@ -23,9 +23,28 @@ describe('Routes', function() {
         supertest.post('/upload')
           .attach('file', __dirname + '/img/boy_960x640.jpg')
           .expect('Content-Type', /image/)
-          .expect(200,done)
+          .expect(200, done)
       });
     });
+
+    context('on success with helmet param', function() {
+      it('responds with image', function(done) {
+        supertest.post('/upload?s=helmet')
+          .attach('file', __dirname + '/img/boy_960x640.jpg')
+          .expect('Content-Type', /image/)
+          .expect(200, done)
+      });
+    });
+
+    context('on failure to find any faces', function(done) {
+      it('responds with original image (albeit resized)', function(done) {
+        supertest.post('/upload')
+        .attach('file', __dirname + '/img/blue_slate.png')
+        .expect('Content-Type', /image/)
+        .expect(200, done)
+      });
+    });
+
 
     context('on failure due to undersized source image', function(done) {
       it('responds with json error message', function(done) {
@@ -72,6 +91,23 @@ describe('Routes', function() {
             ok: false,
             message: "Invalid file - please upload an image (.jpg, .png, .gif)."
           }, done)
+        });
+      });
+
+      context('on failure due to wrong mime type', function(done) {
+        beforeEach(function() {
+          // var mockBin = require('mock-bin')
+          // var unmock = await mockBin('git', 'node', `console.log('${log}')`);
+          // unmock();
+        });
+        afterEach(function() {
+        });
+        it.skip('responds with json error message', function(done) {
+          //figure out the binary mocking eventually to test the error cases
+          supertest.post('/upload')
+          .attach('file', __dirname + '/img/boy_960x640.jpg')
+          .expect('Content-Type', /image/)
+          .expect(400, done)
         });
       });
 

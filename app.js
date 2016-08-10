@@ -9,8 +9,7 @@ var express   =   require( 'express' )
   , fs         =   require( 'fs' )
   , exec      =    require('child_process').exec
 
-var helmetPath = __dirname + '/templates/helmet.png'
-var helmetPath = __dirname + '/templates/mustache.png'
+
 
 var exts = {
   'image/jpeg'   :   '.jpg',
@@ -19,19 +18,20 @@ var exts = {
 }
 
 function nukeFile(filePath){
-  fs.exists(filePath, function(exists) {
-    if (exists) {
-      fs.unlink(filePath, function(err){
-        if (err) {
-          console.log(err)
-        }
-      });
-    }
-  })
+  if (filePath) {
+    fs.exists(filePath, function(exists) {
+      if (exists) {
+        fs.unlink(filePath, function(err){
+          if (err) {
+            console.log(err)
+          }
+        });
+      }
+    })
+  }
 }
 
 module.exports = function(app) {
-
   app.get('/', function( req, res, next ) {
 
     return res.json({ ok: true, message: "send a multipart/form post with an image as the \'file\' parameter." });
@@ -79,7 +79,7 @@ module.exports = function(app) {
 
             easyimg.resize(
               {
-                width      :   800,
+                width      :   960,
                 src        :   src,
                 dst        :   dst
               }
@@ -94,25 +94,31 @@ module.exports = function(app) {
             im.detectObject( cv.FACE_CASCADE, {}, callback );
           },
           function(faces, callback) {
-            if (faces.length == 0)
-            return callback(null, dst)
+            if (faces.length == 0) {
+              return callback(null, dst)
+            }
             var command = []
             var outputFileName = temp.path({suffix: '.jpg'});
             command.push("convert", dst)
-            _.each(faces, function (face) {
-              // helmet settings
-              // var helmetWidth = face.width * 1.95
-              // var helmetHeight = face.height * 1.95
-              // var xOffset = face.x - face.width * 0.28
-              // var yOffset = face.y - face.height * 0.6
-              //mustache settings
-              var helmetWidth = face.width * 0.8
-              var helmetHeight = face.height * 0.8
-              var xOffset = face.x + face.width * 0.1
-              var yOffset = face.y + face.height * 0.58
 
-              var geometry = helmetWidth + "x" + helmetHeight + "+" + xOffset + "+" + yOffset
-              command.push(helmetPath, "-geometry", geometry , "-composite")
+            _.each(faces, function (face) {
+              if (req.query.s == "helmet") {
+                // helmet settings
+                var stencilWidth = face.width * 1.95
+                var stencilHeight = face.height * 1.95
+                var xOffset = face.x - face.width * 0.28
+                var yOffset = face.y - face.height * 0.6
+                var stencilPath = __dirname + '/templates/helmet.png'
+              } else {
+                //default to moustache settings
+                var stencilWidth = face.width * 0.8
+                var stencilHeight = face.height * 0.8
+                var xOffset = face.x + face.width * 0.1
+                var yOffset = face.y + face.height * 0.58
+                var stencilPath = __dirname + '/templates/mustache.png'
+              }
+              var geometry = stencilWidth + "x" + stencilHeight + "+" + xOffset + "+" + yOffset
+              command.push(stencilPath, "-geometry", geometry , "-composite")
             });
             command.push(outputFileName)
             exec(command.join(' '), function(err, stdout, stderr) {
@@ -126,8 +132,8 @@ module.exports = function(app) {
         ],
         function( err, outputFileName ) {
           if ( err ) {
-            nukeFile(src || "notfound.jpg")
-            nukeFile(dst || "notfound.jpg")
+            nukeFile(src)
+            nukeFile(dst)
             return res.status(400).json({ ok: false, message: err });
           }
           return res.sendFile(outputFileName, function(err){
