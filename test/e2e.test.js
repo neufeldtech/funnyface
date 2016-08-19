@@ -94,7 +94,7 @@ describe('Routes', function() {
         });
       });
 
-      context('on failure due to wrong mime type', function(done) {
+      context('on failure due to imagemagick error', function(done) {
         beforeEach(function() {
           // var mockBin = require('mock-bin')
           // var unmock = await mockBin('git', 'node', `console.log('${log}')`);
