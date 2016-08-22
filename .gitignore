@@ -4,4 +4,4 @@
 node_modules/
 images/
 coverage/
-fabfile.py
+fabfile.py*

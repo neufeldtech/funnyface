@@ -1,14 +1,23 @@
-var express   =   require( 'express' )
-  , async     =    require( 'async' )
-  , multer    =   require( 'multer' )
-  , upload     =    multer( { dest: 'images/' } ).single('file')
-  , easyimg   =    require( 'easyimage' )
-  , _         =    require( 'lodash' )
-  , cv         =   require( 'opencv' )
-  , temp       =   require( 'temp' )
-  , fs         =   require( 'fs' )
-  , exec      =    require('child_process').exec
+var express      = require( 'express' )
+var async        = require( 'async' )
+var multer       = require( 'multer' )
+var _            = require( 'lodash' )
+var crypto       = require('crypto')
+var mime         = require('mime')
+var stencils     = require('./src/stencils')
+var lib          = require('./src/lib')()
 
+var storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './images/')
+  },
+  filename: function (req, file, cb) {
+    crypto.pseudoRandomBytes(16, function (err, raw) {
+      cb(null, raw.toString('hex') + Date.now() + '.' + mime.extension(file.mimetype));
+    });
+  }
+});
+var  upload       = multer( { storage: storage } ).single('file')
 
 
 var exts = {
@@ -17,27 +26,13 @@ var exts = {
   'image/gif'    :   '.gif'
 }
 
-function nukeFile(filePath){
-  if (filePath) {
-    fs.exists(filePath, function(exists) {
-      if (exists) {
-        fs.unlink(filePath, function(err){
-          if (err) {
-            console.log(err)
-          }
-        });
-      }
-    })
-  }
-}
-
 module.exports = function(app) {
   app.get('/', function( req, res, next ) {
 
     return res.json({ ok: true, message: "send a multipart/form post with an image as the \'file\' parameter." });
 
   });
-
+  //legacy upload route here
   app.post('/upload', function(req, res, next){
     upload(req, res, function(err) {
       if (err) {
@@ -46,103 +41,100 @@ module.exports = function(app) {
       if (!req.file || !req.file.filename) {
         return res.status(400).json({ ok: false, message: "no image specified for \'file\' parameter" });
       }
-      var filename = req.file.filename + exts[req.file.mimetype]
-      , src = __dirname + '/' + req.file.path
-      , dst = __dirname + '/images/' + filename
+      var src = __dirname + '/' + req.file.path
+      if (!_.includes(['image/jpeg','image/png','image/gif'], req.file.mimetype)) {
+        return res.status(400).json({ok: false, message: "Invalid file - please upload an image (.jpg, .png, .gif)."})
+      }
+      var stencil = "moustache"
+      lib.applyStencil(src, stencil, function(err, fileName) {
+        if (err) {
+          res.status(400).json({ ok: false, message: err})
+        } else {
+          res.sendFile(fileName, function(err) {
+            lib.nukeFile(src, function(err, msg) {
 
-      async.waterfall(
-        [
-          function( callback ) {
-            if (!_.contains(
-              [
-                'image/jpeg',
-                'image/png',
-                'image/gif'
-              ],
-              req.file.mimetype
-            ) ) {
-              return callback('Invalid file - please upload an image (.jpg, .png, .gif).')
-            }
-            return callback();
-          },
-          function( callback ) {
-            easyimg.info( src ).then(
-              function(file) {
-                if ( ( file.width < 500 ) || ( file.height < 300 ) ) {
-                  return callback('Image must be at least 500 x 300 pixels');
-                }
-                return callback();
-              }
-            );
-          },
-          function( callback ) {
-
-            easyimg.resize(
-              {
-                width      :   960,
-                src        :   src,
-                dst        :   dst
-              }
-            ).then(function(image) {
-              return callback();
-            });
-          },
-          function( callback ) {
-            cv.readImage( dst, callback );
-          },
-          function( im, callback ) {
-            im.detectObject( cv.FACE_CASCADE, {}, callback );
-          },
-          function(faces, callback) {
-            if (faces.length == 0) {
-              return callback(null, dst)
-            }
-            var command = []
-            var outputFileName = temp.path({suffix: '.jpg'});
-            command.push("convert", dst)
-
-            _.each(faces, function (face) {
-              if (req.query.s == "helmet") {
-                // helmet settings
-                var stencilWidth = face.width * 1.95
-                var stencilHeight = face.height * 1.95
-                var xOffset = face.x - face.width * 0.28
-                var yOffset = face.y - face.height * 0.6
-                var stencilPath = __dirname + '/templates/helmet.png'
-              } else {
-                //default to moustache settings
-                var stencilWidth = face.width * 0.8
-                var stencilHeight = face.height * 0.8
-                var xOffset = face.x + face.width * 0.1
-                var yOffset = face.y + face.height * 0.58
-                var stencilPath = __dirname + '/templates/mustache.png'
-              }
-              var geometry = stencilWidth + "x" + stencilHeight + "+" + xOffset + "+" + yOffset
-              command.push(stencilPath, "-geometry", geometry , "-composite")
-            });
-            command.push(outputFileName)
-            exec(command.join(' '), function(err, stdout, stderr) {
-              if (err) {
-                console.error(err);
-                return callback('Error processing file')
-              }
-              return callback(null, outputFileName)
             })
-          }
-        ],
-        function( err, outputFileName ) {
-          if ( err ) {
-            nukeFile(src)
-            nukeFile(dst)
-            return res.status(400).json({ ok: false, message: err });
-          }
-          return res.sendFile(outputFileName, function(err){
-            nukeFile(src)
-            nukeFile(dst)
-            nukeFile(outputFileName)
+            lib.nukeFile(fileName, function(err, msg) {
+
+            })
           });
         }
-      );
-    });
-  });
+      })//end applyStencil
+    }); //end upload
+  }); //end POST /upload
+
+  //newer routes below
+  app.post('/api/v1/image', function(req, res, next){
+    upload(req, res, function(err) {
+      if (err) {
+        return res.status(400).json({ ok: false, message: "send a multipart/form post with an image as the \'file\' parameter." })
+      }
+      if (!req.file || !req.file.filename) {
+        return res.status(400).json({ ok: false, message: "no image specified for \'file\' parameter" });
+      }
+      var src = __dirname + '/' + req.file.path
+      if (!_.includes(['image/jpeg','image/png','image/gif'], req.file.mimetype)) {
+        return res.status(400).json({ok: false, message: "Invalid file - please upload an image (.jpg, .png, .gif)."})
+      }
+      var stencil = req.query.template
+      lib.applyStencil(src, stencil, function(err, fileName) {
+        if (err) {
+          res.status(400).json({ ok: false, message: err})
+        } else {
+          res.sendFile(fileName, function(err) {
+            lib.nukeFile(src, function(err, msg) {})
+            lib.nukeFile(fileName, function(err, msg) {})
+          });
+        }
+      })//end applyStencil
+    }); //end upload
+  }); //end POST /upload
+
+  app.get('/api/v1/image', function(req, res, next){
+    var stencil = req.query.template
+    var url = req.query.url
+    var src = ""
+    async.waterfall(
+      [
+        function(callback) {
+          lib.downloadImage(url, function(err, fileName) {
+            if (err) {
+              return callback(err)
+            } else {
+              src = fileName;
+              return callback(null, src)
+            }
+          })
+        },
+        function(fileName, callback) {
+          lib.applyStencil(fileName, stencil, function(err, finalFilename) {
+            if (err) {
+              return callback(err)
+            } else {
+              return callback(null, finalFilename)
+            }
+          })
+        }
+      ],
+      function(err, result) {
+        if (err) {
+          res.status(400).json({ ok: false, message: err })
+        } else {
+          res.sendFile(result, function(err){
+            lib.nukeFile(src, function(err, msg) {});
+            lib.nukeFile(result, function(err, msg) {});
+          });
+        }
+      }
+    )//end async waterfall
+  }); //end GET /url
+
+  app.get(/h(a|e)lp/, function(req,res) {
+    res.json({ ok: true, message: "For assistance, visit https://github.com/neufeldtech/funnyface" })
+  })
+
+  app.get('/api/v1/templates', function(req,res) {
+    res.json({ ok: true, message: stencils })
+  })
+
 }
