@@ -6,6 +6,7 @@ var temp       = require('temp')
 var request    = require('request')
 var exec       = require('child_process').exec
 var async      = require('async')
+var stencils   = require('./stencils')
 
 module.exports = function(){
   var lib = {}
@@ -35,6 +36,10 @@ module.exports = function(){
   }
 
   lib.downloadImage = function(url, cb) {
+    var urlTest = /^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})).?)(?::\d{2,5})?(?:[/?#]\S*)?$/i.test(url);
+    if (! urlTest) {
+      return cb('Error: invalid image URL')
+    }
     var r = request.get(url)
     r.on('error', function(err) {
       return cb("There was an error downloading the image: " + err)
@@ -51,10 +56,13 @@ module.exports = function(){
     });
   }
 
-  lib.applyStencil = function(src, stencil) {
+  lib.applyStencil = function(src, stencil, cb) {
+    var extension = src.slice((src.lastIndexOf(".") - 1 >>> 0) + 2);
+    var rootFileName = src.replace(/\.[^/.]+$/, "");
+    var dst = rootFileName + "-resized." + extension;
     async.waterfall(
       [
-        function( src, dst, callback ) {
+        function( callback ) {
           easyimg.info( src ).then(
             function(file) {
               if ( ( file.width < 500 ) || ( file.height < 300 ) ) {
@@ -79,9 +87,7 @@ module.exports = function(){
           cv.readImage( dst, callback );
         },
         function( im, callback ) {
-          im.detectObject( cv.FACE_CASCADE_ALT2, {
-
-          }, callback );
+          im.detectObject( cv.FACE_CASCADE_ALT2, {}, callback );
         },
         function(faces, callback) {
           if (faces.length == 0) {
@@ -92,48 +98,30 @@ module.exports = function(){
           command.push("convert", dst)
 
           _.each(faces, function (face) {
-            if (req.query.s == "helmet") {
-              // helmet settings
-              var stencilWidth = face.width * 1.95
-              var stencilHeight = face.height * 1.95
-              var xOffset = face.x + face.width * -0.28
-              var yOffset = face.y + face.height * -0.6
-              var stencilPath = __dirname + '/templates/helmet.png'
-            } else {
-              //default to moustache settings
-              var stencilWidth = face.width * 0.8
-              var stencilHeight = face.height * 0.8
-              var xOffset = face.x + face.width * 0.1
-              var yOffset = face.y + face.height * 0.58
-              var stencilPath = __dirname + '/templates/mustache.png'
+            var stencilProps = ""
+            if (stencils[stencil]){
+              stencilProps = stencils[stencil]
+            } else { //default to moustache
+              stencilProps = stencils["moustache"]
             }
+            var stencilWidth = face.width * stencilProps.xScaleFactor
+            var stencilHeight = face.height * stencilProps.yScaleFactor
+            var xOffset = face.x + face.width * stencilProps.xOffset
+            var yOffset = face.y + face.height * stencilProps.yOffset
+            var stencilPath = __dirname + '/templates/' + stencilProps.fileName
             var geometry = stencilWidth + "x" + stencilHeight + "+" + xOffset + "+" + yOffset
             command.push(stencilPath, "-geometry", geometry , "-composite")
           });
           command.push(outputFileName)
           exec(command.join(' '), function(err, stdout, stderr) {
             if (err) {
-              console.error(err);
               return callback('Error processing file')
             }
             return callback(null, outputFileName)
           })
         }
-      ],
-      function( err, outputFileName ) {
-        if ( err ) {
-          lib.nukeFile(src)
-          lib.nukeFile(dst)
-          return res.status(400).json({ ok: false, message: err });
-        }
-        return res.sendFile(outputFileName, function(err){
-          lib.nukeFile(src)
-          lib.nukeFile(dst)
-          lib.nukeFile(outputFileName)
-        });
-      }
-    );
-  }
+      ], cb); //end waterfall
+  } //end applyStencil
 
  return lib;
 }

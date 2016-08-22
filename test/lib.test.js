@@ -154,6 +154,82 @@ describe("lib", function() {
       })
     })//end on failure due to request err
 
+    context("on failure due to invalid image URL", function() {
+      it("should return err mesage", function(done) {
+        lib.downloadImage("http//images.test/get/image/blue_slate.png", function(err, path) {
+          expect(err).to.match(/Error\: invalid image URL/)
+          expect(path).to.not.exist
+          done()
+        })
+      })
+    })//end on failure due to invalid image URL
+
+
   })//end .downloadImage
+  describe(".applyStencil", function() {
+
+    context("on success (default)", function() {
+
+      it("should return outputFileName", function(done) {
+        lib.applyStencil(__dirname + "/img/boy_960x640.jpg", null, function(err, fileName) {
+          expect(err).to.not.exist
+          expect(fileName).to.match(/\.jpg/)
+          done()
+        })
+      })
+
+    })//end on success
+
+    context("on success (stencil specified)", function() {
+
+      it("should return outputFileName", function(done) {
+        lib.applyStencil(__dirname + "/img/boy_960x640.jpg", "helmet", function(err, fileName) {
+          expect(err).to.not.exist
+          expect(fileName).to.match(/\.jpg/)
+          done()
+        })
+      })
+
+    })//end on success
+
+    context("on failure due to image too small", function() {
+
+      it("should throw appropriate error", function(done) {
+        lib.applyStencil(__dirname + "/img/boy_400x267.jpg", "stache", function(err, fileName) {
+          expect(fileName).to.not.exist
+          expect(err).to.match(/Image must be at least 500 x 300 pixels/)
+          done()
+        })
+      })
+
+    })//end on failure due to image too small
+
+    context("on failure due to no faces detected", function() {
+
+      it("should still return image", function(done) {
+        lib.applyStencil(__dirname + "/img/blue_slate.png", "stache", function(err, fileName) {
+          expect(fileName).to.match(/\.png/)
+          expect(err).to.not.exist
+          done()
+        })
+      })
+
+    })//end on failure due to no faces
+
+    xcontext("on failure due to imagemagick error", function() {
+
+      it("should throw appropriate error", function(done) {
+        //TODO mock imagemagick error
+
+        lib.applyStencil(__dirname + "/img/blue_slate.png", "stache", function(err, fileName) {
+          // expect(fileName).to.match(/\.png/)
+          // expect(err).to.not.exist
+          // done()
+        })
+      })
+
+    })//end on failure due to no faces
+
+  })//end .applyStencil
 
 }) //end lib
