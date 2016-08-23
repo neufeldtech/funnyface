@@ -4,10 +4,17 @@
 ##### Requires
 - [Docker](https://www.docker.com/products/docker)
 
+**Option 1: Build the docker image**
 ```
 git clone https://github.com/neufeldtech/funnyface.git funnyface
 docker build funnyface -t myapp
 docker run -d -p 5000:8080 --restart always myapp
+```
+
+**Option 2: Use the prebuilt container image**
+```
+docker pull jordanneufeld/funnyface:latest
+docker run -d -p 5000:8080 --restart always jordanneufeld/funnyface:latest
 ```
 The app should be running now at http://localhost:5000
 
