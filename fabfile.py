@@ -3,7 +3,7 @@ import os
 import sys
 from fabric.contrib.project import rsync_project
 from fabric.contrib.console import confirm
-
+#
 def deploy():
     result=run("uname -a")
 
