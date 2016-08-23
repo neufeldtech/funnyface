@@ -137,4 +137,8 @@ module.exports = function(app) {
     res.json({ ok: true, message: stencils })
   })
 
+  app.get('/api/v1/version', function(req,res) {
+    res.sendFile(__dirname + '/package.json')
+  })
+
 }

@@ -5,3 +5,4 @@ node_modules/
 images/
 coverage/
 fabfile.pyc
+.DS_Store

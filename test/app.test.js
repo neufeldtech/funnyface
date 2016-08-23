@@ -224,4 +224,12 @@ describe('Routes', function() {
         .expect(200, done)
     })
   })
+
+  describe("GET /api/v1/version", function() {
+    it("should return package.json", function(done) {
+      supertest.get('/api/v1/version')
+        .expect('Content-Type', /application\/json/)
+        .expect(200, done)
+    })
+  })
 }); //end ROUTES

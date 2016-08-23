@@ -1,6 +1,6 @@
 var expect = require('chai').expect
 var stencils = require('../src/stencils')
-describe("stencils.json validation", function() {
+describe("stencils validation", function() {
   it("should contain number for xScaleFactor", function() {
     for (stencil in stencils) {
       expect(stencils[stencil].xScaleFactor).to.be.a('number')
